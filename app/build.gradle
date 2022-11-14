@@ -42,6 +42,16 @@ application {
     mainClass = rootProject.hasProperty('app') ? rootProject.property('app') : 'org.apache.pulsar.experiment.shard.app.ShardApp'
 }
 
+bootRun {
+    File asyncProfilerPath=new File(System.getProperty("user.home"), "tools/async-profiler/build/libasyncProfiler.so")
+    if (asyncProfilerPath.exists()) {
+        def profilerDir = new File(rootProject.buildDir, "profiler")
+        profilerDir.mkdirs()
+        jvmArgs "-agentpath:${asyncProfilerPath.absolutePath}=start,event=cpu,event=Java_java_lang_Throwable_fillInStackTrace,file=${profilerDir}/profile_${new Date().format("yyyyMMddHHmmssSSS")}.jfr"
+    }
+}
+
+
 import org.jetbrains.gradle.ext.ModuleRef
 
 rootProject.idea.project.settings.runConfigurations {
