@@ -8,9 +8,9 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
 @SpringBootApplication
-public class App {
+public class AdminApp {
     public static void main(String[] args) {
-        SpringApplication.run(App.class, args);
+        SpringApplication.run(AdminApp.class, args);
     }
 
     public record TopicName(String name) {

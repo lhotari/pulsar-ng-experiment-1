@@ -24,6 +24,14 @@ dependencies {
     testImplementation 'io.projectreactor:reactor-test'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+    implementation 'org.apache.ratis:ratis-client:2.4.0'
+    implementation 'org.apache.ratis:ratis-server:2.4.0'
+    implementation 'org.apache.ratis:ratis-grpc:2.4.0'
+    implementation 'org.apache.ratis:ratis-common:2.4.0'
+    implementation 'org.apache.ratis:ratis-proto:2.4.0'
+    implementation 'org.apache.ratis:ratis-metrics:2.4.0'
+    implementation 'io.dropwizard.metrics:metrics-jvm:3.2.5'
+    implementation 'io.dropwizard.metrics:metrics-core:3.2.5'
 }
 
 application {
