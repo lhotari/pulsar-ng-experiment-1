@@ -1,5 +1,9 @@
 package org.apache.pulsar.experiment.admin.app;
 
+import org.apache.pulsar.experiment.Constants;
+import org.apache.ratis.client.RaftClient;
+import org.apache.ratis.conf.RaftProperties;
+import org.apache.ratis.protocol.Message;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,10 +23,15 @@ public class AdminApp {
 
     @RestController
     public static class Controller {
+        private final RaftClient client = RaftClient.newBuilder()
+                .setProperties(new RaftProperties())
+                .setRaftGroup(Constants.RAFT_GROUP)
+                .build();
 
         @PostMapping("/topics")
-        public Mono<String> createTopic(@RequestBody TopicName topicName) {
-            return Mono.just("Creating " + topicName);
+        public Mono<Void> createTopic(@RequestBody TopicName topicName) {
+            return Mono.fromFuture(() -> client.async().send(Message.valueOf(topicName.name())))
+                    .then();
         }
     }
 }
