@@ -5,9 +5,12 @@
  */
 
 plugins {
+    id 'java'
+    id 'idea'
     id 'org.apache.pulsar.experiment.java-application-conventions'
     id 'org.springframework.boot' version '2.7.5'
     id 'io.spring.dependency-management' version '1.0.15.RELEASE'
+    id "org.jetbrains.gradle.plugin.idea-ext" version "1.1.6"
 }
 
 sourceCompatibility = '17'
@@ -36,5 +39,17 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.apache.pulsar.experiment.app.App'
+    mainClass = 'org.apache.pulsar.experiment.shard.app.ShardApp'
+}
+
+import org.jetbrains.gradle.ext.ModuleRef
+
+rootProject.idea.project.settings.runConfigurations {
+    for (int i = 0; i < 3; i++) {
+        "ShardApp peer${i}"(org.jetbrains.gradle.ext.Application) {
+            mainClass = 'org.apache.pulsar.experiment.shard.app.ShardApp'
+            programParameters = "--shardapp.shard_index=${i}"
+            moduleName = new ModuleRef(project, project.sourceSets.main).toModuleName()
+        }
+    }
 }
