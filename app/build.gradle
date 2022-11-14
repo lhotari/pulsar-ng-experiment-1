@@ -48,7 +48,7 @@ rootProject.idea.project.settings.runConfigurations {
     for (int i = 0; i < 3; i++) {
         "ShardApp peer${i}"(org.jetbrains.gradle.ext.Application) {
             mainClass = 'org.apache.pulsar.experiment.shard.app.ShardApp'
-            programParameters = "--shardapp.shard_index=${i}"
+            programParameters = "--shardapp.peer_index=${i}"
             moduleName = new ModuleRef(project, project.sourceSets.main).toModuleName()
         }
     }
