@@ -52,4 +52,10 @@ rootProject.idea.project.settings.runConfigurations {
             moduleName = new ModuleRef(project, project.sourceSets.main).toModuleName()
         }
     }
+
+    "AdminApp"(org.jetbrains.gradle.ext.Application) {
+        mainClass = 'org.apache.pulsar.experiment.admin.app.AdminApp'
+        programParameters = "--server.port=8080"
+        moduleName = new ModuleRef(project, project.sourceSets.main).toModuleName()
+    }
 }
