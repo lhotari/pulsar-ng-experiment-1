@@ -33,3 +33,8 @@ Start 4 terminal windows and run these commands:
 ```bash
 curl -X POST -d '{"name":"mytopic"}' -H 'Content-Type: application/json' http://localhost:8080/topics
 ```
+
+Add 1000 topics
+```bash
+for i in {1..1000}; do curl -X POST -d '{"name":"mytopic'$i'"}' -H 'Content-Type: application/json' http://localhost:8080/topics; done
+```
