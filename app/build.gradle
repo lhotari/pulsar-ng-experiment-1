@@ -39,7 +39,7 @@ dependencies {
 
 application {
     // Define the main class for the application.
-    mainClass = 'org.apache.pulsar.experiment.shard.app.ShardApp'
+    mainClass = hasProperty('app') ? property('app') : 'org.apache.pulsar.experiment.shard.app.ShardApp'
 }
 
 import org.jetbrains.gradle.ext.ModuleRef
