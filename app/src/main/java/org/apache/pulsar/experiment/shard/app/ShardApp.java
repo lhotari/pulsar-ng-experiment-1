@@ -2,12 +2,9 @@ package org.apache.pulsar.experiment.shard.app;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import lombok.Data;
-import org.apache.ratis.protocol.RaftGroup;
-import org.apache.ratis.protocol.RaftGroupId;
+import org.apache.pulsar.experiment.Constants;
 import org.apache.ratis.protocol.RaftPeer;
-import org.apache.ratis.thirdparty.com.google.protobuf.ByteString;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -30,20 +27,12 @@ public class ShardApp {
 
     @Bean
     MetadataServer metadataServer(ShardAppConfig config) throws IOException {
-        RaftPeer[] peers = new RaftPeer[3];
-        for (int i = 0; i < 3; i++) {
-            peers[i]=RaftPeer.newBuilder()
-                    .setAddress(InetSocketAddress.createUnresolved("localhost", 10050 + i))
-                    .setId("peer" + i)
-                    .build();
-        }
-        RaftGroup raftGroup = RaftGroup.valueOf(RaftGroupId.valueOf(ByteString.copyFromUtf8("helloworld123456")), peers);
-        RaftPeer peer = peers[config.getShardIndex()];
+        RaftPeer peer = Constants.RAFT_PEERS.get(config.getShardIndex());
         File storageDirRoot = new File("/tmp/shardapp", peer.getId().toString());
         if (!storageDirRoot.exists()) {
             storageDirRoot.mkdirs();
         }
-        MetadataServer metadataServer = new MetadataServer(raftGroup, peer, storageDirRoot);
+        MetadataServer metadataServer = new MetadataServer(Constants.RAFT_GROUP, peer, storageDirRoot);
         metadataServer.start();
         return metadataServer;
     }
