@@ -19,9 +19,7 @@ public class MetadataStateMachine extends BaseStateMachine {
         final String logData = entry.getStateMachineLogEntry().getLogData().toStringUtf8();
         final TermIndex termIndex = TermIndex.valueOf(entry);
         entries.add(logData);
-        if (trx.getServerRole() == RaftPeerRole.LEADER) {
-            LOG.info("{}: Added {}, Total size {}", termIndex, logData, entries.size());
-        }
+        LOG.info("{} {}: Added {}, Total size {}", trx.getServerRole(), termIndex, logData, entries.size());
         updateLastAppliedTermIndex(termIndex);
         return CompletableFuture.completedFuture(Message.valueOf("ok"));
     }
