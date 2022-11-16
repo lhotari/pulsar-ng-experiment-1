@@ -1,0 +1,17 @@
+# tmuxp (https://tmuxp.git-pull.com/) configuration file, install tmuxp with "brew install tmuxp"
+# run with command "tmuxp load ./shardapp-tmuxp.yaml"
+session_name: shardapp
+before_script: ./gradlew :app:bootJar
+windows:
+  - window_name: shardapp
+    layout: tiled
+    panes:
+      - java -jar app/build/libs/app.jar --shardapp.peer_index=0
+      - java -jar app/build/libs/app.jar --shardapp.peer_index=1
+      - java -jar app/build/libs/app.jar --shardapp.peer_index=2
+      - java -cp app/build/libs/app.jar -Dloader.main=org.apache.pulsar.experiment.admin.app.AdminApp org.springframework.boot.loader.PropertiesLauncher --server.port=8080
+      - shell_command:
+        - cmd: >-
+            curl -X POST -d '{"name":"mytopic"}' -H 'Content-Type: application/json' http://localhost:8080/topics
+          enter: false
+        suppress_history: false

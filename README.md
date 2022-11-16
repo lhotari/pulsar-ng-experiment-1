@@ -38,3 +38,23 @@ Add 1000 topics
 ```bash
 for i in {1..1000}; do curl -X POST -d '{"name":"mytopic'$i'"}' -H 'Content-Type: application/json' http://localhost:8080/topics; done
 ```
+
+#### Running the example with tmux and tmuxp
+
+The benefit of this is that you can get all 4 terminals started automatically with split panes in a single terminal window. 
+
+If you haven't installed tmux and tmuxp, install them from the package manager or homebrew
+```bash
+brew install tmux tmuxp
+# enable mouse controls for tmux
+echo "set -g mouse on" >> ~/.tmux.conf
+```
+
+Running example with tmuxp
+```bash
+tmux load ./shardapp-tmuxp.yaml
+```
+
+You can get a list of tmux keyboard controls with "C-b ?" sequence. C-b is what enters the command mode in tmux.
+
+You can use "C-b &" to kill all terminals in the window and exit the tmux session.
