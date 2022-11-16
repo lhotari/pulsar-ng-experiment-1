@@ -18,6 +18,8 @@ public final class MetadataServer implements Closeable {
     public MetadataServer(RaftGroup raftGroup, RaftPeer peer, File storageDir) throws IOException {
         final RaftProperties properties = new RaftProperties();
         RaftServerConfigKeys.setStorageDir(properties, Collections.singletonList(storageDir));
+        RaftServerConfigKeys.Snapshot.setAutoTriggerEnabled(properties, true);
+        RaftServerConfigKeys.Snapshot.setAutoTriggerThreshold(properties, 5);
         final int port = NetUtils.createSocketAddr(peer.getAddress()).getPort();
         GrpcConfigKeys.Server.setPort(properties, port);
         final MetadataStateMachine metadataStateMachine = new MetadataStateMachine();
