@@ -53,6 +53,8 @@ echo "set -g mouse on" >> ~/.tmux.conf
 Running example with tmuxp
 ```bash
 tmux load ./shardapp-tmuxp.yaml
+# or simply execute the file
+./shardapp-tmuxp.yaml
 ```
 
 You can get a list of tmux keyboard controls with "C-b ?" sequence. C-b is what enters the command mode in tmux.

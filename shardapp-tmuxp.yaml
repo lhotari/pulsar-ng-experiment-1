@@ -1,3 +1,4 @@
+#!/usr/bin/env -S tmuxp load
 # tmuxp (https://tmuxp.git-pull.com/) configuration file, install tmuxp with "brew install tmuxp"
 # run with command "tmuxp load ./shardapp-tmuxp.yaml"
 session_name: shardapp
