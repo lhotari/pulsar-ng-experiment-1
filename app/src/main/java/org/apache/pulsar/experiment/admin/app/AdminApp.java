@@ -1,5 +1,8 @@
 package org.apache.pulsar.experiment.admin.app;
 
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.experiment.Constants;
 import org.apache.ratis.client.RaftClient;
 import org.apache.ratis.conf.RaftProperties;
@@ -22,6 +25,7 @@ public class AdminApp {
     }
 
     @RestController
+    @Slf4j
     public static class Controller {
         private final RaftClient client = RaftClient.newBuilder()
                 .setProperties(new RaftProperties())
@@ -30,7 +34,16 @@ public class AdminApp {
 
         @PostMapping("/topics")
         public Mono<Void> createTopic(@RequestBody TopicName topicName) {
-            return Mono.fromFuture(() -> client.async().send(Message.valueOf(topicName.name())))
+            AtomicReference<Long> startTime = new AtomicReference<>();
+            return Mono.fromFuture(() -> {
+                        startTime.set(System.nanoTime());
+                        return client.async().send(Message.valueOf(topicName.name()));
+                    })
+                    .doOnSuccess(reply -> {
+                        long durationNanos = System.nanoTime() - startTime.get();
+                        log.info("Completed adding {} index:{} duration:{}ms", topicName.name(), reply.getLogIndex(),
+                                TimeUnit.NANOSECONDS.toMillis(durationNanos));
+                    })
                     .then();
         }
     }
