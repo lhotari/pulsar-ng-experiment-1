@@ -20,6 +20,7 @@ public class ShardApp {
     public static class ShardAppConfig {
         int shardIndex;
         int peerIndex;
+        File storageDirRoot = new File("build/storage");
     }
 
 
@@ -30,7 +31,7 @@ public class ShardApp {
     @Bean
     MetadataServer metadataServer(ShardAppConfig config, ObjectMapper objectMapper) throws IOException {
         RaftPeer peer = Constants.RAFT_PEERS.get(config.getPeerIndex());
-        File storageDirRoot = new File("/tmp/shardapp", peer.getId().toString());
+        File storageDirRoot = new File(config.getStorageDirRoot(), peer.getId().toString());
         if (!storageDirRoot.exists()) {
             storageDirRoot.mkdirs();
         }
