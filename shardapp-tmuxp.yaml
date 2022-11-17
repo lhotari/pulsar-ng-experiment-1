@@ -13,6 +13,6 @@ windows:
       - java -cp app/build/libs/app.jar -Dloader.main=org.apache.pulsar.experiment.admin.app.AdminApp org.springframework.boot.loader.PropertiesLauncher --server.port=8080
       - shell_command:
         - cmd: >-
-            curl -X POST -d '{"name":"mytopic"}' -H 'Content-Type: application/json' http://localhost:8080/topics
+            { for i in {1..100000}; do echo '{"name":"mytopic'$i'"}'; done; } | curl -X POST -T - -H 'Content-Type: application/x-ndjson' 'http://localhost:8080/topics?batchSize=1000'
           enter: false
         suppress_history: false
