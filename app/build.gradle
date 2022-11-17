@@ -45,11 +45,30 @@ application {
 }
 
 bootRun {
-    File asyncProfilerPath=new File(System.getProperty("user.home"), "tools/async-profiler/build/libasyncProfiler.so")
+    File asyncProfilerPath=rootProject.hasProperty('asyncProfilerPath') ? new File(rootProject.property('asyncProfilerPath')) : new File(System.getProperty("user.home"), "tools/async-profiler/build/libasyncProfiler.so")
     if (asyncProfilerPath.exists()) {
         def profilerDir = new File(rootProject.buildDir, "profiler")
         profilerDir.mkdirs()
-        jvmArgs "-agentpath:${asyncProfilerPath.absolutePath}=start,event=cpu,event=Java_java_lang_Throwable_fillInStackTrace,file=${profilerDir}/profile_${new Date().format("yyyyMMddHHmmssSSS")}.jfr"
+        def profilingFormat = rootProject.findProperty("profilingFormat") ?: 'jfr'
+        def profilingConfig
+        switch (rootProject.findProperty('profilingType')) {
+            case "stacktraces":
+                profilingConfig = "event=Java_java_lang_Throwable_fillInStackTrace"
+                break
+            case "cpu":
+                profilingConfig = "event=cpu"
+                break
+            case "wall":
+                profilingConfig = "event=wall"
+                break
+            default:
+                if (profilingFormat == "jfr") {
+                    profilingConfig = "event=cpu,alloc=2m,lock=10ms"
+                } else {
+                    profilingConfig = "event=cpu"
+                }
+        }
+        jvmArgs "-agentpath:${asyncProfilerPath.absolutePath}=start,${profilingConfig},file=${profilerDir}/profile_${new Date().format("yyyyMMddHHmmssSSS")}.${profilingFormat}"
     }
 }
 
