@@ -19,5 +19,5 @@ windows:
           enter: false
         suppress_history: false
       - shell_command:
-        - cmd: less +F build/logs/admin.log
-          sleep_before: 2
+          - cmd: >-
+              { while : ; do [[ -f "build/logs/admin.log" ]] && break; sleep 1; done } && less +F build/logs/admin.log
