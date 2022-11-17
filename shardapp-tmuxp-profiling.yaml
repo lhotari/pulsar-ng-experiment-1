@@ -4,17 +4,17 @@
 session_name: shardapp
 environment:
   PROFILER_ARG: -agentpath:/home/lari/tools/async-profiler/build/libasyncProfiler.so=start,event=cpu,interval=1ms,alloc=2m,lock=1ms
-before_script: ./gradlew :app:bootJar
+before_script: bash -c "./gradlew :app:bootJar && mkdir -p build/profiler build/logs"
 windows:
   - window_name: shardapp
     layout: tiled
     panes:
-      - java ${PROFILER_ARG},file=$PWD/build/profiler/profile_peer_0_$(date +%s).jfr -jar app/build/libs/app.jar --shardapp.peer_index=0
-      - java ${PROFILER_ARG},file=$PWD/build/profiler/profile_peer_1_$(date +%s).jfr -jar app/build/libs/app.jar --shardapp.peer_index=1
-      - java ${PROFILER_ARG},file=$PWD/build/profiler/profile_peer_2_$(date +%s).jfr -jar app/build/libs/app.jar --shardapp.peer_index=2
-      - java ${PROFILER_ARG},file=$PWD/build/profiler/profile_admin_$(date +%s).jfr -cp app/build/libs/app.jar -Dloader.main=org.apache.pulsar.experiment.admin.app.AdminApp org.springframework.boot.loader.PropertiesLauncher --server.port=8080
+      - java ${PROFILER_ARG},file=$PWD/build/profiler/profile_peer_0_$(date +%s).jfr -jar app/build/libs/app.jar --shardapp.peer_index=0 --logging.file.name=./build/logs/peer0.log --logging.pattern.console=
+      - java ${PROFILER_ARG},file=$PWD/build/profiler/profile_peer_1_$(date +%s).jfr -jar app/build/libs/app.jar --shardapp.peer_index=1 --logging.file.name=./build/logs/peer1.log --logging.pattern.console=
+      - java ${PROFILER_ARG},file=$PWD/build/profiler/profile_peer_2_$(date +%s).jfr -jar app/build/libs/app.jar --shardapp.peer_index=2 --logging.file.name=./build/logs/peer2.log --logging.pattern.console=
+      - java ${PROFILER_ARG},file=$PWD/build/profiler/profile_admin_$(date +%s).jfr -cp app/build/libs/app.jar -Dloader.main=org.apache.pulsar.experiment.admin.app.AdminApp org.springframework.boot.loader.PropertiesLauncher --server.port=8080 --logging.file.name=./build/logs/admin.log --logging.pattern.console=
       - shell_command:
         - cmd: >-
-            for i in {1..1000}; do curl -X POST -d '{"name":"mytopic'$i'"}' -H 'Content-Type: application/json' http://localhost:8080/topics; done
+            for i in {1..1000}; do curl -X POST -d '{"name":"mytopic'$i'"}' -H 'Content-Type: application/json' http://localhost:8080/topics ; done
           enter: false
         suppress_history: false
