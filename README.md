@@ -39,6 +39,11 @@ Add 1000 topics
 for i in {1..1000}; do curl -X POST -d '{"name":"mytopic'$i'"}' -H 'Content-Type: application/json' http://localhost:8080/topics; done
 ```
 
+Add 1000 topics using a single HTTP request
+```bash
+{ for i in {1..1000}; do echo '{"name":"mytopic'$i'"}'; done; } | curl -X POST -T - -H 'Content-Type: application/x-ndjson' http://localhost:8080/topics
+```
+
 #### Running the example with tmux and tmuxp
 
 The benefit of this is that you can get all 4 terminals started automatically with split panes in a single terminal window. 

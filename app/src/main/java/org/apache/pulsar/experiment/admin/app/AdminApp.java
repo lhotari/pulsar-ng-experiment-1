@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @SpringBootApplication
@@ -33,18 +34,21 @@ public class AdminApp {
                 .build();
 
         @PostMapping("/topics")
-        public Mono<Void> createTopic(@RequestBody TopicName topicName) {
-            AtomicReference<Long> startTime = new AtomicReference<>();
-            return Mono.fromFuture(() -> {
-                        startTime.set(System.nanoTime());
-                        return client.async().send(Message.valueOf(topicName.name()));
-                    })
-                    .doOnSuccess(reply -> {
-                        long durationNanos = System.nanoTime() - startTime.get();
-                        log.info("Completed adding {} index:{} duration:{}ms", topicName.name(), reply.getLogIndex(),
-                                TimeUnit.NANOSECONDS.toMillis(durationNanos));
-                    })
-                    .then();
+        public Flux<Void> createTopic(@RequestBody Flux<TopicName> topicNames) {
+            return topicNames.concatMap(topicName -> {
+                AtomicReference<Long> startTime = new AtomicReference<>();
+                return Mono.fromFuture(() -> {
+                            startTime.set(System.nanoTime());
+                            return client.async().send(Message.valueOf(topicName.name()));
+                        })
+                        .doOnSuccess(reply -> {
+                            long durationNanos = System.nanoTime() - startTime.get();
+                            log.info("Completed adding {} index:{} duration:{}ms", topicName.name(),
+                                    reply.getLogIndex(),
+                                    TimeUnit.NANOSECONDS.toMillis(durationNanos));
+                        })
+                        .then();
+            }, 0);
         }
     }
 }
