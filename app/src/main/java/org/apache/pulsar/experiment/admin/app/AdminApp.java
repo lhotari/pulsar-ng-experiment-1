@@ -7,7 +7,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.pulsar.experiment.Constants;
+import org.apache.pulsar.experiment.RaftGroupUtil;
 import org.apache.pulsar.experiment.TopicName;
 import org.apache.ratis.client.RaftClient;
 import org.apache.ratis.conf.RaftProperties;
@@ -33,7 +33,7 @@ public class AdminApp {
         private static final int DEFAULT_BATCH_SIZE = 100;
         private final RaftClient client = RaftClient.newBuilder()
                 .setProperties(new RaftProperties())
-                .setRaftGroup(Constants.RAFT_GROUP)
+                .setRaftGroup(RaftGroupUtil.createRaftGroup(0))
                 .build();
         private final ObjectMapper objectMapper;
 
