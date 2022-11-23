@@ -1,0 +1,46 @@
+#!/usr/bin/env -S tmuxp load
+# tmuxp (https://tmuxp.git-pull.com/) configuration file, install tmuxp with "brew install tmuxp"
+session_name: shardapp-multishard
+before_script: ./gradlew :app:bootJar
+environment:
+  SHARD_APP_JVM_ARGS: -Xmx256m
+windows:
+  - window_name: adminapp
+    layout: tiled
+    panes:
+      - java -cp app/build/libs/app.jar -Dloader.main=org.apache.pulsar.experiment.admin.app.AdminApp org.springframework.boot.loader.PropertiesLauncher --server.port=8080 --adminapp.shard_count=5
+      - shell_command:
+        - cmd: >-
+            { for i in {1..100000}; do echo '{"name":"mytopic'$i'"}'; done; } | curl -X POST -T - -H 'Content-Type: application/x-ndjson' 'http://localhost:8080/topics?batchSize=1000'
+          enter: false
+        suppress_history: false
+  - window_name: shard0
+    layout: tiled
+    panes:
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=0 --shardapp.peer_index=0
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=0 --shardapp.peer_index=1
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=0 --shardapp.peer_index=2
+  - window_name: shard1
+    layout: tiled
+    panes:
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=1 --shardapp.peer_index=0
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=1 --shardapp.peer_index=1
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=1 --shardapp.peer_index=2
+  - window_name: shard2
+    layout: tiled
+    panes:
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=2 --shardapp.peer_index=0
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=2 --shardapp.peer_index=1
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=2 --shardapp.peer_index=2
+  - window_name: shard3
+    layout: tiled
+    panes:
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=3 --shardapp.peer_index=0
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=3 --shardapp.peer_index=1
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=3 --shardapp.peer_index=2
+  - window_name: shard4
+    layout: tiled
+    panes:
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=4 --shardapp.peer_index=0
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=4 --shardapp.peer_index=1
+      - java $SHARD_APP_JVM_ARGS -jar app/build/libs/app.jar --shardapp.shard_index=4 --shardapp.peer_index=2
