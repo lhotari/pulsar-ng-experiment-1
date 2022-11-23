@@ -37,6 +37,7 @@ dependencies {
     implementation 'io.dropwizard.metrics:metrics-core:3.2.5'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'com.google.guava:guava:31.1-jre'
 }
 
 application {
