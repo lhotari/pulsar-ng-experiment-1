@@ -21,6 +21,9 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -63,7 +66,8 @@ public class AdminApp {
         @PostMapping("/topics")
         public Flux<Void> createTopic(@RequestBody Flux<TopicName> topicNames,
                                       @RequestParam(required = false) Optional<Integer> batchSize) {
-            return topicNames.groupBy(topicName -> calculateShardIndex(topicName), DEFAULT_BATCH_SIZE * shardCount)
+            return topicNames.groupBy(topicName -> calculateShardIndex(topicName.name()),
+                            DEFAULT_BATCH_SIZE * shardCount)
                     .flatMap(groupFlux -> {
                         int shardIndex = groupFlux.key();
                         RaftClient client = clients.get(shardIndex);
@@ -91,7 +95,7 @@ public class AdminApp {
                     });
         }
 
-        private int calculateShardIndex(TopicName topicName) {
+        private int calculateShardIndex(String topicName) {
             return signSafeMod(calculateHash(topicName), shardCount);
         }
 
@@ -105,8 +109,27 @@ public class AdminApp {
             return mod;
         }
 
-        private int calculateHash(TopicName topicName) {
-            return Hashing.murmur3_32_fixed().hashString(topicName.name(), StandardCharsets.UTF_8).asInt();
+        private int calculateHash(String topicName) {
+            return Hashing.murmur3_32_fixed().hashString(topicName, StandardCharsets.UTF_8).asInt();
+        }
+
+        @GetMapping("/topics/{topic}")
+        public Mono<ResponseEntity<TopicName>> getTopic(@PathVariable("topic") String topic) {
+            return Mono.fromFuture(() -> {
+                        int shardIndex = calculateShardIndex(topic);
+                        RaftClient client = clients.get(shardIndex);
+                        return client.async().sendReadOnly(Message.valueOf(topic));
+                    })
+                    .flatMap(reply -> {
+                        String existingTopic = reply.getMessage().getContent().toStringUtf8();
+                        if (existingTopic.isEmpty()) {
+                            return Mono.empty();
+                        } else {
+                            return Mono.just(new TopicName(existingTopic));
+                        }
+                    })
+                    .map(ResponseEntity::ok)
+                    .switchIfEmpty(Mono.fromSupplier(() -> ResponseEntity.notFound().build()));
         }
     }
 }

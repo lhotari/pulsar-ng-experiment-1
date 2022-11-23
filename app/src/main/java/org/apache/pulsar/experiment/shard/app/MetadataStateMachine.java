@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import org.apache.pulsar.experiment.TopicName;
 import org.apache.ratis.proto.RaftProtos.LogEntryProto;
@@ -16,7 +18,7 @@ import org.apache.ratis.statemachine.impl.BaseStateMachine;
 
 public class MetadataStateMachine extends BaseStateMachine {
     private final ObjectReader listOfTopicNameReader;
-    List<TopicName> entries = new ArrayList<>();
+    Set<TopicName> entries = new HashSet<>();
 
     public MetadataStateMachine(ObjectMapper objectMapper) {
         listOfTopicNameReader = objectMapper.readerForListOf(TopicName.class);
@@ -37,5 +39,16 @@ public class MetadataStateMachine extends BaseStateMachine {
                 entries.size());
         updateLastAppliedTermIndex(termIndex);
         return CompletableFuture.completedFuture(Message.EMPTY);
+    }
+
+    @Override
+    public CompletableFuture<Message> query(Message request) {
+        String requestString = request.getContent().toStringUtf8();
+        LOG.info("Querying {}", requestString);
+        if (entries.contains(new TopicName(requestString))) {
+            return CompletableFuture.completedFuture(request);
+        } else {
+            return CompletableFuture.completedFuture(Message.EMPTY);
+        }
     }
 }
