@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuples;
 
 @SpringBootApplication
 @EnableConfigurationProperties(AdminApp.AdminAppConfig.class)
@@ -64,8 +63,7 @@ public class AdminApp {
         @PostMapping("/topics")
         public Flux<Void> createTopic(@RequestBody Flux<TopicName> topicNames,
                                       @RequestParam(required = false) Optional<Integer> batchSize) {
-            return topicNames.map(topicName -> Tuples.of(calculateHash(topicName), topicName))
-                    .groupBy(tuple -> signSafeMod(tuple.getT1(), shardCount), DEFAULT_BATCH_SIZE * shardCount)
+            return topicNames.groupBy(topicName -> calculateShardIndex(topicName), DEFAULT_BATCH_SIZE * shardCount)
                     .flatMap(groupFlux -> {
                         int shardIndex = groupFlux.key();
                         RaftClient client = clients.get(shardIndex);
@@ -91,6 +89,10 @@ public class AdminApp {
                                     .then();
                         }, 0);
                     });
+        }
+
+        private int calculateShardIndex(TopicName topicName) {
+            return signSafeMod(calculateHash(topicName), shardCount);
         }
 
         private static int signSafeMod(long dividend, int divisor) {
