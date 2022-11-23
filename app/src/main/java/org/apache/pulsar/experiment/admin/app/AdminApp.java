@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pulsar.experiment.RaftGroupUtil;
 import org.apache.pulsar.experiment.TopicName;
@@ -18,6 +19,8 @@ import org.apache.ratis.conf.RaftProperties;
 import org.apache.ratis.protocol.Message;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -27,7 +30,14 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuples;
 
 @SpringBootApplication
+@EnableConfigurationProperties(AdminApp.AdminAppConfig.class)
 public class AdminApp {
+    @ConfigurationProperties("adminapp")
+    @Data
+    public static class AdminAppConfig {
+        int shardCount = 1;
+    }
+
     public static void main(String[] args) {
         SpringApplication.run(AdminApp.class, args);
     }
@@ -37,23 +47,25 @@ public class AdminApp {
     public static class Controller {
         private static final int DEFAULT_BATCH_SIZE = 100;
 
-        private static final int SHARD_COUNT = 5;
-        private final List<RaftClient> clients = IntStream.range(0, SHARD_COUNT)
-                .mapToObj(shardIndex ->  RaftClient.newBuilder()
-                .setProperties(new RaftProperties())
-                .setRaftGroup(RaftGroupUtil.createRaftGroup(shardIndex))
-                .build()).toList();
+        private final List<RaftClient> clients;
         private final ObjectMapper objectMapper;
+        private final int shardCount;
 
-        public Controller(ObjectMapper objectMapper) {
+        public Controller(ObjectMapper objectMapper, AdminAppConfig adminAppConfig) {
             this.objectMapper = objectMapper;
+            this.shardCount = adminAppConfig.getShardCount();
+            this.clients = IntStream.range(0, shardCount)
+                    .mapToObj(shardIndex -> RaftClient.newBuilder()
+                            .setProperties(new RaftProperties())
+                            .setRaftGroup(RaftGroupUtil.createRaftGroup(shardIndex))
+                            .build()).toList();
         }
 
         @PostMapping("/topics")
         public Flux<Void> createTopic(@RequestBody Flux<TopicName> topicNames,
                                       @RequestParam(required = false) Optional<Integer> batchSize) {
             return topicNames.map(topicName -> Tuples.of(calculateHash(topicName), topicName))
-                    .groupBy(tuple -> signSafeMod(tuple.getT1(), SHARD_COUNT), DEFAULT_BATCH_SIZE * SHARD_COUNT)
+                    .groupBy(tuple -> signSafeMod(tuple.getT1(), shardCount), DEFAULT_BATCH_SIZE * shardCount)
                     .flatMap(groupFlux -> {
                         int shardIndex = groupFlux.key();
                         RaftClient client = clients.get(shardIndex);
